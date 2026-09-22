@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dictation-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start", "--prefix", "web"],
+      "port": 3000
+    }
+  ]
+}

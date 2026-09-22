@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dictation Flow</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>Dictation Flow</h1>
+    <p class="sub">Hold <kbd>Space</kbd> or click the mic. Verbatim and cleaned-up text, from one request.</p>
+  </header>
+
+  <section class="recorder">
+    <button id="mic" class="mic" aria-label="Hold to record">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15Z"/><path d="M19 11.5a7 7 0 0 1-14 0"/><line x1="12" y1="18.5" x2="12" y2="22"/></svg>
+    </button>
+    <div class="meter" id="meter"><span></span></div>
+    <div class="timer" id="timer">0.0s</div>
+    <div class="status" id="status">Ready</div>
+  </section>
+
+  <section class="panes">
+    <article class="pane">
+      <h2>Verbatim <span class="tag">what you said</span></h2>
+      <div class="out" id="verbatim" aria-live="polite"><span class="ph">Your raw transcript appears here.</span></div>
+    </article>
+    <article class="pane accent">
+      <h2>Cleaned <span class="tag">what you meant</span></h2>
+      <div class="out" id="cleaned" aria-live="polite"><span class="ph">The rewritten version appears here.</span></div>
+      <button class="copy" id="copy" hidden>Copy</button>
+    </article>
+  </section>
+
+  <div class="stats" id="stats" hidden></div>
+
+  <details class="settings">
+    <summary>Settings</summary>
+    <label>
+      <span>Cleanup instruction <em>(llm_instruction, max 2048)</em></span>
+      <textarea id="instruction" rows="4"></textarea>
+    </label>
+    <label>
+      <span>Key terms <em>(keyterms_prompt, comma-separated, max 100)</em></span>
+      <input id="keyterms" type="text" placeholder="AssemblyAI, Kubernetes, Harnoor">
+    </label>
+    <label>
+      <span>Audio context <em>(stt_prompt, max 6000)</em></span>
+      <input id="sttprompt" type="text" placeholder="A developer dictating notes in a quiet room.">
+    </label>
+    <label>
+      <span>Languages <em>(language_codes &mdash; defaults to English; add more only for genuine code-switching)</em></span>
+      <div class="langs" id="langs"></div>
+    </label>
+    <div class="presets">
+      <button data-preset="clean">Clean up</button>
+      <button data-preset="verbatim">Punctuate only</button>
+      <button data-preset="bullets">Bullet points</button>
+      <button data-preset="email">Email tone</button>
+    </div>
+
+    <div class="modifiers">
+      <span class="mod-label">Spelling</span>
+      <div class="chips" id="dialects"></div>
+    </div>
+
+    <div class="modifiers">
+      <span class="mod-label">Shortcuts <em>&mdash; say the phrase, get the text</em></span>
+      <div id="shortcuts"></div>
+      <button type="button" class="add-shortcut" id="addShortcut">+ Add shortcut</button>
+    </div>
+
+    <div class="budget" id="budget"></div>
+  </details>
+</main>
+<script src="app.js" type="module"></script>
+</body>
+</html>
