@@ -20,24 +20,58 @@ function phraseRegex(phrase) {
   return new RegExp(`${left}${body}${right}`, 'gi');
 }
 
-/** Apply every shortcut to `text`. Blank rows are ignored. */
-export function applyShortcuts(text, pairs = []) {
-  if (!text) return text;
-  return pairs.reduce((acc, { phrase, replacement }) => {
+/** Normalize the user's rows: trim, drop blanks, later rows win on duplicate phrases. */
+function table(pairs) {
+  const map = new Map();
+  for (const { phrase, replacement } of pairs) {
     const p = phrase?.trim();
     const r = replacement?.trim();
-    if (!p || !r) return acc;
-    return acc.replace(phraseRegex(p), r);
-  }, text);
+    if (p && r) map.set(p.toLowerCase(), { phrase: p, replacement: r });
+  }
+  return [...map.values()];
+}
+
+/**
+ * Apply every shortcut to `text` in ONE pass.
+ *
+ * Applying them one after another (the obvious reduce) has two bugs, both measured:
+ *  - overlap: "email" listed before "personal email" rewrites the inner word first,
+ *    so the longer phrase never matches ("personal e-mail").
+ *  - cascade: a replacement gets re-scanned by later shortcuts, so "sign off" →
+ *    "best regards" → "best Cheers" if "regards" is also a shortcut.
+ * A single alternation, longest phrase first, fixes both: at each position the
+ * longest phrase wins, and replaced text is never looked at again.
+ */
+export function applyShortcuts(text, pairs = []) {
+  if (!text) return text;
+  const rows = table(pairs);
+  if (!rows.length) return text;
+
+  const byKey = new Map(rows.map((r) => [r.phrase.toLowerCase(), r.replacement]));
+  // Longest first: regex alternation takes the FIRST alternative that matches at a
+  // position, so ordering by length is what makes it longest-match.
+  const alternatives = rows
+    .map((r) => r.phrase)
+    .sort((a, b) => b.length - a.length)
+    .map((p) => `(?:${phraseRegex(p).source})`);
+
+  const combined = new RegExp(alternatives.join('|'), 'gi');
+  return text.replace(combined, (match) => byKey.get(match.toLowerCase()) ?? match);
 }
 
 /** Which shortcuts actually fired — so the UI can say so. */
 export function matchedShortcuts(text, pairs = []) {
   if (!text) return [];
-  return pairs
-    .filter(({ phrase, replacement }) => {
-      const p = phrase?.trim();
-      return p && replacement?.trim() && phraseRegex(p).test(text);
-    })
-    .map(({ phrase }) => phrase.trim());
+  const rows = table(pairs);
+  if (!rows.length) return [];
+  // Report what the single pass would actually replace, not every phrase that merely
+  // occurs — "email" is not reported when it only appears inside "personal email".
+  const alternatives = rows
+    .map((r) => r.phrase)
+    .sort((a, b) => b.length - a.length)
+    .map((p) => `(?:${phraseRegex(p).source})`);
+  const combined = new RegExp(alternatives.join('|'), 'gi');
+  const hits = new Set();
+  for (const m of text.matchAll(combined)) hits.add(m[0].toLowerCase());
+  return rows.filter((r) => hits.has(r.phrase.toLowerCase())).map((r) => r.phrase);
 }

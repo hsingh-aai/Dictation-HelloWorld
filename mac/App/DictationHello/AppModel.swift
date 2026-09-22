@@ -65,6 +65,7 @@ final class AppModel {
         return RequestSettings(
             apiKey: apiKey,
             keyterms: KeytermFitter.parse(prefs.keytermsText),
+            snippets: prefs.snippets,
             styleName: profile?.name ?? "Default",
             styleInstruction: profile?.preferences,
             enhanced: prefs.enhanced

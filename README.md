@@ -99,8 +99,19 @@ out as a clause in `llm_instruction`, which was wrong twice over:
   two.
 
 `shared/shortcuts.js` does it as a case-insensitive, word-boundary-aware replacement on the
-returned text: exact, deterministic, unlimited, and free of instruction budget. The verbatim pane
-is deliberately left untouched, since that pane is what you actually said.
+returned text: exact, deterministic, and free of instruction budget (1000 shortcuts run in ~5 ms).
+The verbatim pane is deliberately left untouched, since that pane is what you actually said.
+
+It runs as **one pass, longest phrase first**, because the obvious loop — apply each shortcut in
+turn — has two bugs:
+
+- **Overlap.** With `email → e-mail` listed before `personal email → you@example.com`, the short one
+  rewrites the inner word first and the long one never matches: "my personal e-mail".
+- **Cascade.** A replacement gets re-scanned by later shortcuts: `sign off → best regards` plus
+  `regards → Cheers` yields "best Cheers".
+
+A single combined regex, alternatives sorted longest-first, fixes both: at each position the longest
+phrase wins, and replaced text is never looked at again. So row order doesn't matter.
 
 The general lesson, if you add your own: **put deterministic text transforms in code and keep the
 instruction for things only a model can do.** A style preference is a good clause; a find-and-replace

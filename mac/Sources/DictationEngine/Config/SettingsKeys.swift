@@ -7,6 +7,7 @@ public enum SettingKey: String, CaseIterable, Sendable {
     case activationMode
     case soundPack
     case keyterms
+    case snippets
     case inputDeviceUID
     case enhanced
     case styleProfiles

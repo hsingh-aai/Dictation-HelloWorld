@@ -12,6 +12,8 @@ final class Preferences {
     var activationMode: ActivationMode { didSet { defaults.set(activationMode.rawValue, forKey: SettingKey.activationMode.defaultsKey) } }
     var soundPack: SoundPack { didSet { defaults.set(soundPack.rawValue, forKey: SettingKey.soundPack.defaultsKey) } }
     var keytermsText: String { didSet { defaults.set(keytermsText, forKey: SettingKey.keyterms.defaultsKey) } }
+    /// Stored as a JSON string so it can be seeded with `defaults write`.
+    var snippets: [Snippet] { didSet { defaults.set(Self.encode(snippets), forKey: SettingKey.snippets.defaultsKey) } }
     var inputDeviceUID: String? { didSet { defaults.set(inputDeviceUID, forKey: SettingKey.inputDeviceUID.defaultsKey) } }
     var enhanced: Bool { didSet { defaults.set(enhanced, forKey: SettingKey.enhanced.defaultsKey) } }
     var profiles: [StyleProfile] { didSet { defaults.set(try? JSONEncoder().encode(profiles), forKey: SettingKey.styleProfiles.defaultsKey) } }
@@ -25,6 +27,7 @@ final class Preferences {
         activationMode = defaults.string(forKey: SettingKey.activationMode.defaultsKey).flatMap(ActivationMode.init) ?? .default
         soundPack = defaults.string(forKey: SettingKey.soundPack.defaultsKey).flatMap(SoundPack.init) ?? .default
         keytermsText = defaults.string(forKey: SettingKey.keyterms.defaultsKey) ?? ""
+        snippets = Self.decodeSnippets(defaults.string(forKey: SettingKey.snippets.defaultsKey))
         inputDeviceUID = defaults.string(forKey: SettingKey.inputDeviceUID.defaultsKey)
         enhanced = defaults.object(forKey: SettingKey.enhanced.defaultsKey) as? Bool ?? true
         profiles = defaults.data(forKey: SettingKey.styleProfiles.defaultsKey)
@@ -38,6 +41,17 @@ final class Preferences {
     /// Styles as shown in the Output Style row: Default, then up to four profiles.
     var styleChoices: [(id: UUID?, name: String)] {
         [(nil, "Default")] + profiles.map { ($0.id, $0.name) }
+    }
+
+    private static func encode(_ snippets: [Snippet]) -> String? {
+        (try? JSONEncoder().encode(snippets)).map { String(decoding: $0, as: UTF8.self) }
+    }
+
+    /// Accepts full records or just `{"trigger": …, "expansion": …}` pairs.
+    private static func decodeSnippets(_ json: String?) -> [Snippet] {
+        struct Loose: Decodable { var id: UUID?; var trigger: String; var expansion: String }
+        guard let data = json?.data(using: .utf8), let loose = try? JSONDecoder().decode([Loose].self, from: data) else { return [] }
+        return loose.map { Snippet(id: $0.id ?? UUID(), trigger: $0.trigger, expansion: $0.expansion) }
     }
 
     func removeAll() {

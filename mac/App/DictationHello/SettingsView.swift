@@ -8,6 +8,8 @@ struct SettingsView: View {
         TabView {
             GeneralSettings(model: model)
                 .tabItem { Label("General", systemImage: "gearshape") }
+            ShortcutSettings(model: model)
+                .tabItem { Label("Shortcuts", systemImage: "text.badge.plus") }
             AdvancedSettings(model: model)
                 .tabItem { Label("Advanced", systemImage: "slider.horizontal.3") }
         }
@@ -62,6 +64,42 @@ struct GeneralSettings: View {
                     }
                 }
                 .onAppear { devices = InputDevice.all() }
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+/// Spoken shortcuts: say the trigger, the expansion is pasted instead.
+struct ShortcutSettings: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var prefs = model.prefs
+        Form {
+            Section {
+                ForEach($prefs.snippets) { $snippet in
+                    HStack(spacing: 8) {
+                        TextField("Say…", text: $snippet.trigger)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 170)
+                        Image(systemName: "arrow.right").foregroundStyle(.secondary)
+                        TextField("Paste…", text: $snippet.expansion)
+                            .textFieldStyle(.roundedBorder)
+                        Button(role: .destructive) {
+                            prefs.snippets.removeAll { $0.id == snippet.id }
+                        } label: { Image(systemName: "trash") }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                Button("Add shortcut") {
+                    prefs.snippets.append(Snippet(trigger: "", expansion: ""))
+                }
+            } header: {
+                Text("Shortcuts")
+            } footer: {
+                Text("Say a shortcut on its own or mid-sentence. Case, punctuation and \"dot\" don't matter, so \"personal cal dot com\" matches \"personal cal.com\".")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

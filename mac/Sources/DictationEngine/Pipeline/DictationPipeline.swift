@@ -5,14 +5,16 @@ import os
 public struct RequestSettings: Sendable, Equatable {
     public var apiKey: String?
     public var keyterms: [String]
+    public var snippets: [Snippet]
     public var styleName: String
     public var styleInstruction: String?
     /// Cleanup on → `llm_response` (falling back to `text`); off → `text`. Decided on the response.
     public var enhanced: Bool
 
-    public init(apiKey: String?, keyterms: [String] = [], styleName: String = "Default", styleInstruction: String? = nil, enhanced: Bool = true) {
+    public init(apiKey: String?, keyterms: [String] = [], snippets: [Snippet] = [], styleName: String = "Default", styleInstruction: String? = nil, enhanced: Bool = true) {
         self.apiKey = apiKey
         self.keyterms = keyterms
+        self.snippets = snippets
         self.styleName = styleName
         self.styleInstruction = styleInstruction
         self.enhanced = enhanced
@@ -117,7 +119,8 @@ public actor DictationPipeline {
         let config = { (context: FocusSnapshot) in
             DictationConfig(
                 sttPrompt: PromptFitter.fit(history: history, priorText: context.isSecure ? nil : context.priorText),
-                keyterms: KeytermFitter.fit(settings.keyterms),
+                // User terms first: they win the cap over shortcut triggers.
+                keyterms: KeytermFitter.fit(settings.keyterms + SnippetExpander.keyterms(for: settings.snippets)),
                 llmInstruction: Instruction.build(style: settings.styleInstruction)
             )
         }
@@ -184,7 +187,8 @@ public actor DictationPipeline {
             if let llmError = response.llmError {
                 Self.log.notice("rewrite degraded (\(llmError, privacy: .public)); using verbatim text")
             }
-            let text = response.transcript(enhanced: settings.enhanced).trimmingCharacters(in: .whitespacesAndNewlines)
+            let picked = response.transcript(enhanced: settings.enhanced).trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = SnippetExpander.expand(picked, snippets: settings.snippets)
             // An empty transcript returns to idle without injecting or reporting.
             guard !text.isEmpty else {
                 setPhase(.idle)
