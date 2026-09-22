@@ -2,6 +2,7 @@ import { diff, words } from '/shared/diff.js';
 import { toWav, MAX_MS, MIN_MS } from '/shared/wav.js';
 import { PRESETS } from '/shared/presets.js';
 import { buildInstruction, MODIFIERS, EXCLUSIVE_GROUPS } from '/shared/instruction.js';
+import { applyShortcuts, matchedShortcuts } from '/shared/shortcuts.js';
 import { LANGUAGES } from '/shared/languages.js';
 
 const el = {
@@ -84,7 +85,6 @@ const currentExpansions = () => [...el.shortcuts.querySelectorAll('.shortcut-row
 const composeInstruction = () => buildInstruction({
   base: el.instruction.value,
   modifiers: [...activeModifiers],
-  expansions: currentExpansions(),
 });
 
 /**
@@ -92,13 +92,15 @@ const composeInstruction = () => buildInstruction({
  * 400s rather than degrading. So the budget is shown, not assumed.
  */
 function updateBudget() {
-  const { bytes, max, fits, overBy, remaining } = composeInstruction();
-  const pct = Math.min(100, (bytes / max) * 100);
+  const { chars, max, fits, overBy, remaining } = composeInstruction();
+  const pct = Math.min(100, (chars / max) * 100);
+  const count = currentExpansions().filter((e) => e.phrase.trim() && e.replacement.trim()).length;
   el.budget.className = `budget ${!fits ? 'over' : remaining < 150 ? 'warn' : ''}`;
   el.budget.innerHTML = `
     ${fits
-      ? `instruction <b>${bytes}</b> / ${max} bytes · ${remaining} left`
-      : `instruction <b>${bytes}</b> / ${max} bytes — over by ${overBy}. Remove a shortcut; the API rejects the whole request.`}
+      ? `instruction <b>${chars}</b> / ${max} chars · ${remaining} left`
+      : `instruction <b>${chars}</b> / ${max} chars — over by ${overBy}. Shorten it; the API rejects the whole request.`}
+    ${count ? `· ${count} shortcut${count === 1 ? '' : 's'}, applied locally — no budget cost` : ''}
     <span class="bar"><span style="width:${pct}%"></span></span>`;
   el.mic.disabled = !fits;
   el.mic.style.opacity = fits ? '' : '.45';
@@ -215,8 +217,14 @@ async function handleStop() {
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 function render(data) {
+  // Deliberately NOT named `shortcuts`: an element id leaks into the global scope,
+  // so a bare `shortcuts` silently resolves to <div id="shortcuts"> instead.
+  const shortcutPairs = currentExpansions();
   const verbatim = data.text || '';
-  const cleaned = data.llm_response || '';
+  // Literal substitution, applied here rather than asked of the model: exact,
+  // unlimited, and it costs no instruction budget. Verbatim is left untouched —
+  // that pane is what you actually said.
+  const cleaned = applyShortcuts(data.llm_response || '', shortcutPairs);
   el.verbatim.textContent = verbatim;
 
   if (data.llm_error) {
@@ -235,7 +243,8 @@ function render(data) {
       el.copy.textContent = 'Copied';
       setTimeout(() => (el.copy.textContent = 'Copy'), 1200);
     };
-    setStatus('Done', 'ok');
+    const fired = matchedShortcuts(data.llm_response || '', shortcutPairs);
+    setStatus(fired.length ? `Done · replaced ${fired.map((f) => `"${f}"`).join(', ')}` : 'Done', 'ok');
   } else {
     el.cleaned.innerHTML = '<span class="ph">No rewrite returned.</span>';
     setStatus('Done', 'ok');

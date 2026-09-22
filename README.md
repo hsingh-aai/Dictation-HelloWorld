@@ -57,21 +57,21 @@ cd mac && ./build.sh && open "/Applications/Dictation Hello Dev.app"
 Requires full Xcode. See [`mac/README.md`](mac/README.md) for the trigger model, permissions,
 signing and the headless self-test.
 
-## Instruction modifiers
+## Instruction modifiers and shortcuts
 
-The cleanup instruction is composed rather than typed: a measured base task, plus optional clauses
-appended after a precedence preamble. The web app ships two — spelling (American/British) and
-shortcuts (say a phrase, get written text).
+The cleanup instruction is composed rather than typed: a measured base task, plus optional
+clauses appended after a precedence preamble. The web app ships spelling (American/British) as
+an instruction modifier, and shortcuts — say a phrase, get written text — as a **local**
+transform.
 
-Three findings from measuring this against the live route (2026-09-22), all counter-intuitive
-enough to be worth stating:
+**The `llm_instruction` cap is 2048 characters, and going over rejects the whole request.**
+Measured on the live route: 2048 passes, 2049 returns `400 llm_instruction: String should have
+at most 2048 characters`, before any audio is read. So one character over means every dictation
+fails, not a degraded rewrite. It counts *codepoints*, not bytes — 2048 `é` is 4096 bytes and
+passes. The base instruction alone is 1529, so the UI shows a live meter and disables the mic
+when over.
 
-**1. The 2048-byte `llm_instruction` cap rejects the entire request.** Not the modifier — every
-dictation 400s before any audio is read. The base instruction alone is 1529 bytes and the preamble
-132, leaving **~387 bytes**: about one spelling clause plus two shortcuts. So the UI shows a live
-byte meter and disables the mic when over. Without that you hit a cliff with no local signal.
-
-**2. A modifier must name the rule it overrides, or it silently does nothing.**
+**A modifier clause must name the rule it overrides, or it silently does nothing.**
 
 | Clause | Result |
 |---|---|
@@ -79,32 +79,32 @@ byte meter and disables the mic when over. Without that you hit a cliff with no 
 | "Respell words into British English (color→colour, organize→organise). This spelling change overrides the rule above about keeping words exactly as spoken." | **works** |
 | A longer, more forceful imperative | **no-op** |
 
-The base instruction says "keep every remaining word exactly as spoken… do not correct or rephrase",
-which beats a politely-worded preference even after the precedence preamble. Naming the specific
+The base says "keep every remaining word exactly as spoken… do not correct or rephrase", which
+beats a politely-worded preference even after the precedence preamble. Naming the specific
 conflict is what wins — not emphasis, not length.
 
-**3. A shortcut clause must say "in place", or it lands in the wrong place.** The obvious
-phrasing — "when the speaker says one of these phrases, replace it with the written form" —
-prepends the replacement at the *start* of the text, where a removed filler used to be, and leaves
-the spoken phrase untouched:
+**Shortcuts are applied client-side, and shouldn't be an LLM instruction at all.** They started
+out as a clause in `llm_instruction`, which was wrong twice over:
 
-> said: "um send the invoice to my **personal email** and then let me know"
-> got: "**you@example.com**, send the invoice to my personal email and then let me know"
+- It spent the budget the cleanup task needs, capping you at about two shortcuts.
+- It asked a language model to perform a literal substitution, which it did unreliably. The
+  obvious phrasing prepended the replacement at the *start* of the text, where a removed filler
+  had been, and left the spoken phrase untouched:
 
-Adding "in place" plus "leave every other word, and the word order, exactly as it was" fixes it
-(9/9 across three runs and three utterance shapes). The pairs also have to stay an arrow **list** —
-merging them into prose ("replace X with Y, and Z with W") passes with one shortcut and collapses
-with two, dropping half the sentence.
+  > said: "um send the invoice to my **personal email** and then let me know"
+  > got: "**you@example.com**, send the invoice to my personal email and then let me know"
 
-**4. Clause order decides whether both apply.**
+  Wording around that was possible ("in place", plus keeping the pairs as an arrow list) but
+  fragile — merging pairs into prose passed with one shortcut and dropped half the sentence with
+  two.
 
-| Order | Outcome |
-|---|---|
-| expansions → dialect | both applied |
-| dialect → expansions | **expansion silently dropped** |
+`shared/shortcuts.js` does it as a case-insensitive, word-boundary-aware replacement on the
+returned text: exact, deterministic, unlimited, and free of instruction budget. The verbatim pane
+is deliberately left untouched, since that pane is what you actually said.
 
-`buildInstruction()` always emits expansions first. A third clause type means re-measuring: this
-interference produces no error, just a preference that quietly stops working.
+The general lesson, if you add your own: **put deterministic text transforms in code and keep the
+instruction for things only a model can do.** A style preference is a good clause; a find-and-replace
+is not.
 
 ## Config parameters
 
@@ -113,13 +113,13 @@ both builds send WAV, which carries them in its header.
 
 | Parameter | Cap | In the web UI |
 |---|---|---|
-| `llm_instruction` | 2048 bytes | Composed — preset + modifiers |
+| `llm_instruction` | 2048 characters | Composed — preset + modifiers |
 | `stt_prompt` | 4096 Unicode scalars | "Audio context" |
 | `keyterms_prompt` | 2048 bytes **and** 100 terms | "Key terms" |
 | `sample_rate`, `channels` | — | n/a (WAV) |
 
-Caps are clamped client-side rather than sent and rejected. The three numbers differ — reusing one
-field's figure for another is a documented way to break every dictation at once.
+Caps are clamped client-side rather than sent and rejected. The numbers differ per field — reusing
+one field's figure for another is a documented way to break every dictation at once.
 
 The web app also exposes `language_codes` (32 codes, filtered against the API's own list and omitted
 when the selection is just English). The skill argues for sending no language field at all, since
@@ -145,7 +145,8 @@ you rely on the picker.
 SKILL for Dictation.md        the build guide — start here
 .claude/skills/               same file, auto-loaded by Claude Code
 shared/                       one copy of the logic both builds use
-  instruction.js              instruction composer, byte budget, modifier clauses
+  instruction.js              instruction composer, character budget, modifier clauses
+  shortcuts.js                local phrase replacement (no instruction budget)
   diff.js                     word-level LCS diff
   wav.js                      MediaRecorder blob → 16 kHz mono WAV
   presets.js                  rewrite instructions
