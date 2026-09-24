@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Patient Intake Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #673ab7;
+    --accent-soft: #ede7f6;
+    --bg: #f0ebf8;
+    --card: #ffffff;
+    --text: #202124;
+    --muted: #5f6368;
+    --border: #dadce0;
+    --danger: #d93025;
+    --live: #e8453c;
+    --ok: #188038;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fef7e0;
+    --warn: #b06000;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: Roboto, Arial, sans-serif; color: var(--text); }
+  .wrap { max-width: 720px; margin: 12px auto 48px; padding: 0 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 24px; margin-bottom: 12px; transition: background .4s, border-color .4s;
+  }
+  .card.header { border-top: 10px solid var(--accent); }
+  .card.header h1 { margin: 0 0 8px; font-size: 32px; font-weight: 400; }
+  .card.header p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .required-note { color: var(--danger); font-size: 14px; margin-top: 12px !important; }
+
+  /* Big "fill everything" dictation card */
+  .hero { text-align: center; border-left: 6px solid var(--accent); }
+  .hero h2 { margin: 0 0 6px; font-size: 20px; font-weight: 500; }
+  .hero .hint { margin: 0 auto 20px; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 520px; }
+  .big-mic {
+    width: 96px; height: 96px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; display: inline-grid; place-items: center;
+    box-shadow: 0 4px 14px rgba(103,58,183,.35); transition: transform .15s, background .15s;
+  }
+  .big-mic:hover { transform: scale(1.05); }
+  .big-mic svg { width: 42px; height: 42px; }
+  .big-mic.live { background: var(--live); animation: bigpulse 1.4s infinite; }
+  .big-mic.connecting, .big-mic.busy { opacity: .6; cursor: wait; }
+  @keyframes bigpulse {
+    0% { box-shadow: 0 0 0 0 rgba(232,69,60,.5); }
+    70% { box-shadow: 0 0 0 22px rgba(232,69,60,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,69,60,0); }
+  }
+  .hero-status { font-size: 14px; color: var(--muted); margin: 14px 0 0; min-height: 20px; }
+  .hero-transcript {
+    width: 100%; margin-top: 16px; min-height: 70px; font: inherit; font-size: 14px; line-height: 1.5;
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; resize: vertical; text-align: left;
+  }
+  .hero-partial { font-size: 13px; color: var(--muted); font-style: italic; text-align: left; min-height: 18px; margin-top: 6px; }
+  .hero-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+  .summary { margin-top: 14px; font-size: 14px; text-align: left; border-radius: 6px; padding: 10px 14px; display: none; line-height: 1.5; }
+  .summary.show { display: block; }
+  .summary.ok { background: var(--ok-soft); color: var(--ok); }
+  .summary.warn { background: var(--warn-soft); color: var(--warn); }
+  .summary a { color: inherit; font-weight: 500; }
+
+  .section-title {
+    background: var(--accent); color: #fff; border-radius: 8px 8px 0 0;
+    padding: 10px 24px; font-size: 15px; font-weight: 500; margin: 20px 0 0; display: inline-block;
+  }
+  .section-title + .card { border-top-left-radius: 0; }
+  label.q { display: block; font-size: 16px; margin-bottom: 16px; }
+  .req { color: var(--danger); }
+  .field { display: flex; align-items: flex-end; gap: 10px; }
+  .field input, .field textarea {
+    flex: 1; font: inherit; font-size: 14px; border: none; border-bottom: 1px solid var(--border);
+    padding: 8px 0; outline: none; background: transparent; resize: vertical; color: var(--text);
+  }
+  .field textarea { min-height: 36px; }
+  .field input:focus, .field textarea:focus { border-bottom: 2px solid var(--accent); }
+  .partial { font-size: 13px; color: var(--muted); font-style: italic; min-height: 18px; margin-top: 6px; }
+  .mic {
+    flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+    background: #fff; cursor: pointer; display: grid; place-items: center; color: var(--muted);
+    transition: background .15s, color .15s;
+  }
+  .mic:hover { background: var(--accent-soft); color: var(--accent); }
+  .mic.live { background: var(--live); color: #fff; border-color: var(--live); animation: pulse 1.4s infinite; }
+  .mic.connecting, .mic.busy { opacity: .6; cursor: wait; }
+  .key-card { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+  .key-card label { flex: 1 1 100%; color: var(--muted); line-height: 1.5; }
+  .key-card input {
+    flex: 1 1 240px; font: inherit; border: none; border-bottom: 1px solid var(--border);
+    padding: 8px 0; outline: none; background: transparent;
+  }
+  .key-card input:focus { border-bottom: 2px solid var(--accent); }
+  .key-card a { color: var(--accent); }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232,69,60,.55); }
+    70% { box-shadow: 0 0 0 10px rgba(232,69,60,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,69,60,0); }
+  }
+  .mic svg { width: 18px; height: 18px; }
+
+  .card.filled { background: var(--ok-soft); border-color: #a8dab5; }
+  .card.missing { border-left: 4px solid #f9ab00; }
+  .card.missing label.q::after {
+    content: "Not captured — type or tap 🎤"; font-size: 12px; color: var(--warn);
+    background: var(--warn-soft); border-radius: 10px; padding: 2px 8px; margin-left: 8px; vertical-align: middle;
+  }
+
+  .options { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
+  .options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); gap: 4px; align-items: flex-end; }
+  .scale label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  button.primary {
+    background: var(--accent); color: #fff; border: none; border-radius: 4px;
+    padding: 10px 24px; font: inherit; font-weight: 500; cursor: pointer;
+  }
+  button.primary:disabled { opacity: .5; cursor: default; }
+  button.link { background: none; border: none; color: var(--accent); font: inherit; cursor: pointer; padding: 10px 4px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #323232; color: #fff;
+    padding: 12px 20px; border-radius: 4px; font-size: 14px; display: none; max-width: calc(100% - 32px); z-index: 10;
+  }
+  pre { background: #f8f9fa; border-radius: 6px; padding: 16px; overflow-x: auto; font-size: 13px; }
+  .hidden, [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <form id="intake" novalidate>
+    <div class="card header">
+      <h1>Patient Intake Form</h1>
+      <p>Please complete this form before your visit. Use the big microphone to fill everything at once, or the 🎤 next to any question to dictate just that answer.</p>
+      <p class="required-note">* Indicates required question</p>
+    </div>
+
+    <div class="card key-card" id="keyCard" hidden>
+      <label for="apiKey">This page calls AssemblyAI's Dictation API straight from your browser. Paste your API key to enable the microphones — it stays in this browser only. <a href="https://www.assemblyai.com/dashboard/api-keys" target="_blank" rel="noopener">Get a key</a></label>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="AssemblyAI API key" />
+      <button type="button" class="link" id="forgetKey">Forget key</button>
+    </div>
+
+    <div class="card hero">
+      <h2>Fill the whole form by voice</h2>
+      <p class="hint">Tap the microphone and just talk — for example: <em>"My name is Maria Lopez, born March 4th 1985, phone 415 555 0123. I'm here because of a sore throat and fever since Monday. I take lisinopril 10 milligrams and I'm allergic to penicillin…"</em> Tap again when you're done (up to 2 minutes).</p>
+      <button type="button" class="big-mic" id="bigMic" title="Dictate the whole form"></button>
+      <p class="hero-status" id="heroStatus">Tap to start speaking</p>
+      <textarea class="hero-transcript hidden" id="heroTranscript" placeholder="Your transcript will appear here — you can edit it before filling the form."></textarea>
+      <div class="hero-partial" id="heroPartial"></div>
+      <div class="hero-actions hidden" id="heroActions">
+        <button type="button" class="link" id="heroClear">Clear transcript</button>
+        <button type="button" class="primary" id="heroFill">Fill form from transcript</button>
+      </div>
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="section-title">Personal information</div>
+    <div class="card">
+      <label class="q">Full name <span class="req">*</span></label>
+      <div class="field"><input name="full_name" data-format="Return just the name with proper capitalization." required placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Date of birth <span class="req">*</span></label>
+      <div class="field"><input name="date_of_birth" data-format="Format the date as Month D, YYYY (for example March 4, 1985)." required placeholder="e.g. March 4, 1985" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Sex</label>
+      <div class="options">
+        <label><input type="radio" name="sex" value="Female" /> Female</label>
+        <label><input type="radio" name="sex" value="Male" /> Male</label>
+        <label><input type="radio" name="sex" value="Other" /> Other</label>
+        <label><input type="radio" name="sex" value="Prefer not to say" /> Prefer not to say</label>
+      </div>
+    </div>
+    <div class="card">
+      <label class="q">Phone number <span class="req">*</span></label>
+      <div class="field"><input name="phone" data-format="Format a 10-digit US number as (XXX) XXX-XXXX." required placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Email</label>
+      <div class="field"><input name="email" data-format="Reconstruct a spoken email address ("dot" becomes ".", "at" becomes "@"), all lowercase, no spaces." placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Home address</label>
+      <div class="field"><textarea name="address" rows="1" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Emergency contact (name, relationship, phone)</label>
+      <div class="field"><textarea name="emergency_contact" rows="1" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+
+    <div class="section-title">Insurance</div>
+    <div class="card">
+      <label class="q">Insurance provider</label>
+      <div class="field"><input name="insurance_provider" placeholder="Your answer" data-dictate
+        data-keyterms="Aetna,Cigna,UnitedHealthcare,Blue Cross Blue Shield,Kaiser Permanente,Humana,Medicare,Medicaid" /></div>
+    </div>
+    <div class="card">
+      <label class="q">Member ID</label>
+      <div class="field"><input name="member_id" data-format="Return the ID as uppercase letters and digits with no spaces or punctuation." placeholder="Your answer" data-dictate /></div>
+    </div>
+
+    <div class="section-title">Visit details</div>
+    <div class="card">
+      <label class="q">Reason for today's visit <span class="req">*</span></label>
+      <div class="field"><textarea name="reason_for_visit" rows="2" required placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Describe your symptoms and when they started</label>
+      <div class="field"><textarea name="symptoms" rows="2" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Current pain level (0–10)</label>
+      <div class="scale" id="painScale"><span>None</span></div>
+    </div>
+    <div class="card">
+      <label class="q">Current medications (name and dose)</label>
+      <div class="field"><textarea name="medications" data-format="Write a comma-separated list of medications with doses (e.g. Lisinopril 10 mg daily)." rows="2" placeholder="Your answer" data-dictate
+        data-keyterms="lisinopril,metformin,atorvastatin,levothyroxine,amlodipine,omeprazole,albuterol,gabapentin,sertraline,losartan"></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Allergies</label>
+      <div class="field"><textarea name="allergies" data-format="Write a comma-separated list of allergies, including the reaction if stated." rows="1" placeholder="Your answer" data-dictate
+        data-keyterms="penicillin,sulfa,amoxicillin,latex,ibuprofen,codeine"></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Past medical history / surgeries</label>
+      <div class="field"><textarea name="medical_history" data-format="Write a comma-separated list of conditions and surgeries, with years if stated." rows="2" placeholder="Your answer" data-dictate
+        data-keyterms="hypertension,type 2 diabetes,asthma,COPD,hypothyroidism,appendectomy,cholecystectomy"></textarea></div>
+    </div>
+
+    <div class="card">
+      <label class="options"><input type="checkbox" name="consent" required /> I confirm this information is accurate to the best of my knowledge. <span class="req">*</span></label>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="reset" class="link">Clear form</button>
+    </div>
+  </form>
+
+  <div id="result" class="card hidden">
+    <h2 style="font-weight:400;margin-top:0">Thanks — your responses were recorded.</h2>
+    <p style="color:var(--muted);font-size:14px">Demo mode: nothing was stored. Here's what was captured:</p>
+    <pre id="json"></pre>
+    <button class="link" onclick="location.reload()">Submit another response</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const form = $("intake");
+const DICTATION_URL = "https://dictation.assemblyai.com/v1/transcribe/live";
+const MAX_MS = 115_000; // the API's hard cap is 120 s; release a little early
+const MIN_MS = 300;     // below ~100 ms the API returns an empty transcript
+const KEY_STORE = "intake-form.assemblyai-key";
+const MIC_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>`;
+const STOP_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+
+// Build the 0–10 pain scale.
+for (let i = 0; i <= 10; i++) {
+  $("painScale").insertAdjacentHTML("beforeend", `<label>${i}<input type="radio" name="pain_level" value="${i}" /></label>`);
+}
+$("painScale").insertAdjacentHTML("beforeend", "<span>Worst</span>");
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(t._h);
+  t._h = setTimeout(() => (t.style.display = "none"), 5000);
+}
+
+const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+
+/* ---------- Mode: local proxy (key on server) or direct (visitor's own key) ---------- */
+
+let PROXY = false;
+
+async function detectMode() {
+  try {
+    const r = await fetch("/health", { cache: "no-store" });
+    PROXY = r.ok && (await r.json()).proxy === true;
+  } catch {
+    PROXY = false;
+  }
+  if (PROXY) return;
+  $("keyCard").hidden = false;
+  $("heroFill").hidden = true; // re-filling from edited text needs the server's LLM Gateway call
+  try { $("apiKey").value = localStorage.getItem(KEY_STORE) || ""; } catch {}
+}
+
+$("apiKey").addEventListener("input", () => {
+  try { localStorage.setItem(KEY_STORE, $("apiKey").value.trim()); } catch {}
+});
+$("forgetKey").addEventListener("click", () => {
+  $("apiKey").value = "";
+  try { localStorage.removeItem(KEY_STORE); } catch {}
+  toast("Key removed from this browser");
+});
+
+function readyToRecord() {
+  if (PROXY || $("apiKey").value.trim()) return true;
+  $("keyCard").scrollIntoView({ behavior: "smooth", block: "center" });
+  $("apiKey").focus({ preventScroll: true });
+  toast("Paste your AssemblyAI API key first");
+  return false;
+}
+
+/* ---------- Recording: MediaRecorder -> 16 kHz mono WAV ---------- */
+
+let active = null; // { owner, stop }
+
+async function toWav(blob) {
+  const ctx = new AudioContext();
+  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+  await ctx.close();
+
+  const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+  const node = offline.createBufferSource();
+  node.buffer = decoded;
+  node.connect(offline.destination);
+  node.start();
+  const mono = (await offline.startRendering()).getChannelData(0);
+
+  const bytes = new ArrayBuffer(44 + mono.length * 2);
+  const view = new DataView(bytes);
+  const ascii = (off, s) => [...s].forEach((c, i) => view.setUint8(off + i, c.charCodeAt(0)));
+  ascii(0, "RIFF");            view.setUint32(4, 36 + mono.length * 2, true);
+  ascii(8, "WAVEfmt ");        view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, 16000, true); view.setUint32(28, 16000 * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  ascii(36, "data");           view.setUint32(40, mono.length * 2, true);
+  for (let i = 0; i < mono.length; i++) {
+    const s = Math.max(-1, Math.min(1, mono[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return new Blob([bytes], { type: "audio/wav" });
+}
+
+// Starts recording for `owner`. onDone(wav | null) runs once the user stops.
+async function record(owner, { onLive, onTick, onDone }) {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+  });
+  const mr = new MediaRecorder(stream);
+  const chunks = [];
+  const t0 = performance.now();
+  mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+
+  const tick = setInterval(() => onTick?.(performance.now() - t0), 250);
+  const auto = setTimeout(() => stop(), MAX_MS);
+  const me = { owner, stop };
+
+  function stop() {
+    if (mr.state === "inactive") return;
+    clearInterval(tick);
+    clearTimeout(auto);
+    mr.stop();
+    stream.getTracks().forEach((t) => t.stop());
+    if (active === me) active = null;
+  }
+
+  mr.onstop = async () => {
+    const ms = performance.now() - t0;
+    if (ms < MIN_MS || !chunks.length) return onDone(null);
+    try {
+      onDone(await toWav(new Blob(chunks, { type: mr.mimeType })));
+    } catch (err) {
+      toast(`Couldn't read the recording: ${err.message}`);
+      onDone(null);
+    }
+  };
+
+  active?.stop();
+  active = me;
+  mr.start(250);
+  onLive?.();
+}
+
+/* ---------- Dictation API ---------- */
+
+// Only documented fields, clipped to the API's caps — over any cap it rejects the whole request.
+function cleanConfig({ llm_instruction, keyterms_prompt } = {}) {
+  const cfg = { sample_rate: 16000, channels: 1 };
+  if (llm_instruction?.trim()) cfg.llm_instruction = [...llm_instruction.trim()].slice(0, 2048).join("");
+  if (keyterms_prompt?.length) {
+    const kept = [];
+    let bytes = 0;
+    for (const t of keyterms_prompt) {
+      const b = new TextEncoder().encode(t).length;
+      if (kept.length >= 100 || bytes + b > 2048) break;
+      kept.push(t);
+      bytes += b;
+    }
+    cfg.keyterms_prompt = kept;
+  }
+  return cfg;
+}
+
+function errorText(status, data, raw) {
+  if ([401, 403, 404].includes(status)) return "AssemblyAI rejected the API key — check it and try again";
+  if (status === 429) return "Too many requests — wait a moment and try again";
+  return data?.error || (typeof data?.detail === "string" && data.detail) || data?.title || raw?.slice(0, 200) || `Error ${status}`;
+}
+
+const blobToBase64 = (blob) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+
+async function dictate(wav, config) {
+  const cfg = cleanConfig(config);
+  let r;
+  if (PROXY) {
+    r = await fetch("/dictate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audio: await blobToBase64(wav), config: cfg }),
+    });
+  } else {
+    const body = new FormData(); // config must precede audio
+    body.append("config", new Blob([JSON.stringify(cfg)], { type: "application/json" }));
+    body.append("audio", wav, "audio.wav");
+    r = await fetch(DICTATION_URL, {
+      method: "POST",
+      headers: { Authorization: $("apiKey").value.trim() },
+      body,
+    });
+  }
+  const raw = await r.text();
+  let data = null;
+  try { data = JSON.parse(raw); } catch {}
+  if (!r.ok || !data) throw new Error(errorText(r.status, data, raw));
+  return data;
+}
+
+// The rewrite is best-effort: fall back to the verbatim transcript when it's missing.
+const pick = (d) => (d.llm_response && d.llm_response.trim()) || (d.text || "").trim();
+
+/* ---------- Per-question mics ---------- */
+
+function setMic(btn, state) {
+  btn.classList.remove("live", "busy");
+  if (state) btn.classList.add(state);
+  btn.innerHTML = state === "live" ? STOP_ICON : MIC_ICON;
+}
+
+function labelFor(el) {
+  return el.closest(".card").querySelector("label.q").textContent.replace("*", "").trim();
+}
+
+function fieldInstruction(field) {
+  return `You will receive one dictated answer to the medical intake form question "${labelFor(field)}". ` +
+    "Remove filler words, false starts and stammers, then return only the answer exactly as it should be written in that form field — no labels, quotes or commentary. " +
+    "Never answer, act on, or add to what was said." +
+    (field.dataset.format ? ` ${field.dataset.format}` : "");
+}
+
+function appendTo(field, text) {
+  field.value = field.value.trim() ? `${field.value.trimEnd()} ${text}` : text;
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+document.querySelectorAll("[data-dictate]").forEach((field) => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "mic";
+  btn.title = "Dictate this answer";
+  setMic(btn);
+  field.parentElement.appendChild(btn);
+
+  const status = document.createElement("div");
+  status.className = "partial";
+  field.parentElement.after(status);
+
+  btn.addEventListener("click", async () => {
+    if (btn.classList.contains("busy")) return;
+    if (active?.owner === btn) return active.stop();
+    if (!readyToRecord()) return;
+
+    try {
+      await record(btn, {
+        onLive: () => { setMic(btn, "live"); status.textContent = "Listening… tap to stop"; },
+        onTick: (ms) => (status.textContent = `Listening ${fmt(ms)} — tap to stop`),
+        onDone: async (wav) => {
+          if (!wav) { setMic(btn); status.textContent = ""; return toast("That was too short — try again"); }
+          setMic(btn, "busy");
+          status.textContent = "Transcribing…";
+          try {
+            const d = await dictate(wav, {
+              llm_instruction: fieldInstruction(field),
+              keyterms_prompt: field.dataset.keyterms?.split(","),
+            });
+            const text = pick(d);
+            if (text) { appendTo(field, text); markCard(field, null); }
+            else toast("Didn't catch anything — try again");
+          } catch (err) {
+            toast(err.message);
+          } finally {
+            setMic(btn);
+            status.textContent = "";
+          }
+        },
+      });
+    } catch (err) {
+      toast(err.name === "NotAllowedError" ? "Microphone access was blocked — allow it in your browser" : err.message);
+      setMic(btn);
+    }
+  });
+});
+
+/* ---------- Big mic: one recording fills the whole form ---------- */
+
+const bigMic = $("bigMic");
+const heroTranscript = $("heroTranscript");
+bigMic.innerHTML = MIC_ICON;
+
+const ALL_KEYTERMS = [...new Set(
+  [...document.querySelectorAll("[data-keyterms]")].flatMap((el) => el.dataset.keyterms.split(","))
+)];
+
+function describeFields() {
+  const seen = new Set();
+  const fields = [];
+  for (const el of form.elements) {
+    if (!el.name || seen.has(el.name) || el.name === "consent") continue;
+    seen.add(el.name);
+    const f = { name: el.name, label: labelFor(el) };
+    if (el.type === "radio") f.options = [...form.querySelectorAll(`[name="${el.name}"]`)].map((r) => r.value);
+    fields.push(f);
+  }
+  return fields;
+}
+
+// Replaces the service's cleanup step with field extraction, so one request returns the JSON.
+function formInstruction(fields) {
+  const keys = fields
+    .map((f) => (f.name === "pain_level" ? f.name : f.options ? `${f.name} (${f.options.join("|")})` : f.name))
+    .join(", ");
+  return "You will receive a patient's dictated description for a medical intake form. Do not clean or return the transcript. " +
+    `Instead return ONLY a JSON object with exactly these keys: ${keys}. ` +
+    "Use null for anything not clearly stated; never guess. " +
+    'Formats: date_of_birth "Month D, YYYY"; phone "(XXX) XXX-XXXX"; spoken emails reconstructed (dot, at); ' +
+    "fields with listed options must use one option exactly; pain_level an integer 0-10 as a string; " +
+    "medications, allergies and medical_history as comma-separated lists with doses or years if stated; " +
+    "reason_for_visit a short phrase; symptoms a short description including onset. No markdown, no commentary.";
+}
+
+function parseValues(text) {
+  const m = text?.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch { return null; }
+}
+
+function setHero(state, message) {
+  bigMic.classList.remove("live", "busy");
+  if (state) bigMic.classList.add(state);
+  bigMic.innerHTML = state === "live" ? STOP_ICON : MIC_ICON;
+  if (message) $("heroStatus").textContent = message;
+}
+
+bigMic.addEventListener("click", async () => {
+  if (bigMic.classList.contains("busy")) return;
+  if (active?.owner === bigMic) return active.stop();
+  if (!readyToRecord()) return;
+
+  $("summary").className = "summary";
+  try {
+    await record(bigMic, {
+      onLive: () => setHero("live", "Listening… tap again when you're finished"),
+      onTick: (ms) => ($("heroStatus").textContent = `Listening ${fmt(ms)} — tap again when you're finished`),
+      onDone: async (wav) => {
+        if (!wav) return setHero(null, "That was too short — tap to try again");
+        setHero("busy", "Filling in your form…");
+        try {
+          const fields = describeFields();
+          const d = await dictate(wav, { llm_instruction: formInstruction(fields), keyterms_prompt: ALL_KEYTERMS });
+          const text = (d.text || "").trim();
+          if (!text) return setHero(null, "Didn't catch anything — tap to try again");
+
+          heroTranscript.value = heroTranscript.value.trim() ? `${heroTranscript.value.trimEnd()} ${text}` : text;
+          heroTranscript.classList.remove("hidden");
+          $("heroActions").classList.remove("hidden");
+
+          let values = parseValues(d.llm_response);
+          if (!values && PROXY) values = await extractFromText(text, fields);
+          if (!values) {
+            setHero(null, "Tap the mic again to add more");
+            return showSummary("warn", "Got your words but couldn't sort them into questions this time. Try again, or use the 🎤 on each question.");
+          }
+          applyValues(values, fields);
+          setHero(null, "Done — tap the mic again to add more");
+        } catch (err) {
+          toast(err.message);
+          setHero(null, "Tap to try again");
+        }
+      },
+    });
+  } catch (err) {
+    toast(err.name === "NotAllowedError" ? "Microphone access was blocked — allow it in your browser" : err.message);
+    setHero(null);
+  }
+});
+
+async function extractFromText(transcript, fields) {
+  const r = await fetch("/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transcript, instruction: formInstruction(fields) }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || "Couldn't fill the form");
+  return parseValues(data.llm_response);
+}
+
+$("heroFill").addEventListener("click", async () => {
+  const transcript = heroTranscript.value.trim();
+  if (!transcript) return toast("Nothing to fill from yet");
+  active?.stop();
+  $("heroFill").disabled = true;
+  setHero("busy", "Filling in your form…");
+  try {
+    const fields = describeFields();
+    const values = await extractFromText(transcript, fields);
+    if (!values) throw new Error("Couldn't fill the form from that text");
+    applyValues(values, fields);
+    setHero(null, "Done — tap the mic again to add more");
+  } catch (err) {
+    toast(err.message);
+    setHero(null, "Tap to start speaking");
+  } finally {
+    $("heroFill").disabled = false;
+  }
+});
+
+$("heroClear").addEventListener("click", () => {
+  heroTranscript.value = "";
+  $("summary").className = "summary";
+});
+
+function markCard(el, cls) {
+  const card = el.closest(".card");
+  card.classList.remove("filled", "missing");
+  if (cls) card.classList.add(cls);
+}
+
+function showSummary(kind, html) {
+  const s = $("summary");
+  s.className = `summary show ${kind}`;
+  s.innerHTML = html;
+}
+
+// Fills what was said; never clears an answer the patient already gave.
+function applyValues(values, fields) {
+  const filled = [], missing = [];
+  for (const f of fields) {
+    const v = values[f.name];
+    const inputs = form.querySelectorAll(`[name="${f.name}"]`);
+    const isRadio = inputs[0].type === "radio";
+    if (v !== null && v !== undefined && String(v).trim() !== "") {
+      if (isRadio) {
+        const radio = [...inputs].find((r) => r.value.toLowerCase() === String(v).trim().toLowerCase());
+        if (!radio) continue;
+        radio.checked = true;
+      } else {
+        inputs[0].value = String(v).trim();
+        inputs[0].dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      markCard(inputs[0], "filled");
+      filled.push(f.label);
+    } else {
+      const answered = isRadio ? [...inputs].some((r) => r.checked) : inputs[0].value.trim() !== "";
+      if (answered) continue;
+      markCard(inputs[0], "missing");
+      missing.push(f);
+    }
+  }
+
+  if (missing.length) {
+    showSummary("warn", `Filled <b>${filled.length}</b> of ${fields.length} questions. Still needed: ` +
+      missing.map((m) => `<a href="#" data-jump="${m.name}">${m.label}</a>`).join(", ") +
+      ". Tap the 🎤 on those questions, or tap the big mic again and say them.");
+  } else {
+    showSummary("ok", `All ${fields.length} questions answered. Please review, tick the confirmation box, and submit.`);
+  }
+}
+
+$("summary").addEventListener("click", (e) => {
+  const name = e.target.dataset?.jump;
+  if (!name) return;
+  e.preventDefault();
+  const el = form.querySelector(`[name="${name}"]`);
+  el.closest(".card").scrollIntoView({ behavior: "smooth", block: "center" });
+  if (el.type !== "radio") setTimeout(() => el.focus({ preventScroll: true }), 400);
+});
+
+/* ---------- Form behaviour ---------- */
+
+form.addEventListener("input", (e) => {
+  if (e.target.tagName === "TEXTAREA" && e.target.id !== "heroTranscript") {
+    e.target.style.height = "auto";
+    e.target.style.height = e.target.scrollHeight + "px";
+  }
+  if (e.isTrusted && e.target.closest(".card.missing")) markCard(e.target, null);
+});
+form.addEventListener("change", (e) => {
+  if (e.target.type === "radio") markCard(e.target, null);
+});
+
+form.addEventListener("reset", () => {
+  active?.stop();
+  const key = $("apiKey").value; // the key field sits inside the form; keep it
+  setTimeout(() => ($("apiKey").value = key));
+  form.querySelectorAll(".card").forEach((c) => c.classList.remove("filled", "missing"));
+  heroTranscript.value = "";
+  $("summary").className = "summary";
+  setHero(null, "Tap to start speaking");
+});
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  active?.stop();
+  const invalid = [...form.querySelectorAll("[required]")].find((el) =>
+    el.type === "checkbox" ? !el.checked : !el.value.trim()
+  );
+  if (invalid) {
+    invalid.closest(".card").scrollIntoView({ behavior: "smooth", block: "center" });
+    return toast(invalid.type === "checkbox" ? "Please tick the confirmation box" : `Required: ${labelFor(invalid)}`);
+  }
+  const data = Object.fromEntries(new FormData(form));
+  data.consent = !!data.consent;
+  $("json").textContent = JSON.stringify(data, null, 2);
+  form.classList.add("hidden");
+  $("keyCard").hidden = true;
+  $("result").classList.remove("hidden");
+  window.scrollTo(0, 0);
+});
+
+detectMode();
+</script>
+</body>
+</html>

@@ -57,6 +57,17 @@ cd mac && ./build.sh && open "/Applications/Dictation Hello Dev.app"
 Requires full Xcode. See [`mac/README.md`](mac/README.md) for the trigger model, permissions,
 signing and the headless self-test.
 
+## Voice intake form
+
+```bash
+cd intake-form && node server.js
+```
+
+A patient intake form in the style of Google Forms. One big mic fills the whole form from a
+single recording, because `llm_instruction` returns the answers as JSON in the same request.
+Every question also has its own mic for filling gaps. No dependencies, and it also runs as a
+static page with the visitor's own key. See [`intake-form/README.md`](intake-form/README.md).
+
 ## Instruction modifiers and shortcuts
 
 The cleanup instruction is composed rather than typed: a measured base task, plus optional
