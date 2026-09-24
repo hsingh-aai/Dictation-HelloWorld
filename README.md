@@ -48,6 +48,18 @@ browser** — that is the entire reason the proxy exists.
 You get a before/after diff (a word-level LCS of `text` against `llm_response`, which is what makes
 the cleanup legible), plus live controls for every config parameter the API accepts.
 
+The menu bar at the top switches between two screens:
+
+- **Dictation** (the default) is the before/after playground described above.
+- **Intake form** (`#intake`) is a patient intake form in the style of Google Forms. One big mic
+  fills the whole form from a single recording: its `llm_instruction` replaces the cleanup
+  rewrite with field extraction, so `llm_response` comes back as JSON keyed by question, with no
+  second LLM call (about 2 s for a 15 s clip). Every question also has its own mic, with an
+  instruction scoped to that field. That's how `"um my number is uh four one five…"` lands as
+  `(415) 555-0123`, and `keyterms_prompt` lists get medication and allergy spellings right.
+  Questions the big mic missed are flagged, and answers already given are never cleared. Editing
+  the transcript and re-filling goes through `/api/extract` (LLM Gateway, same key).
+
 ## macOS app
 
 ```bash
