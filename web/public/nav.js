@@ -9,7 +9,7 @@ function show() {
     else a.removeAttribute('aria-current');
   });
   document.body.dataset.screen = name;
-  document.title = name === 'intake' ? 'Intake Form · Dictation Flow' : 'Dictation Flow';
+  document.title = name === 'intake' ? 'Intake Form · Dictation Demo' : 'Dictation Demo';
   // Leaving a screen mid-recording would leave the mic open where you can't see it.
   window.dispatchEvent(new CustomEvent('screenchange', { detail: name }));
 }
