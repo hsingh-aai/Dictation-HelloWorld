@@ -1,0 +1,4 @@
+[
+  { "phrase": "personal email", "replacement": "you@example.com" },
+  { "phrase": "personal website", "replacement": "https://example.com" }
+]
