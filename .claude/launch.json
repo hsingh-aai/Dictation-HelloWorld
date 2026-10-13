@@ -4,8 +4,19 @@
     {
       "name": "dictation-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start", "--prefix", "web"],
-      "port": 3000
+      "runtimeArgs": [
+        "start",
+        "--prefix",
+        "web"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "tts-demo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4317", "--directory", "tts"],
+      "port": 4317
     }
   ]
 }
