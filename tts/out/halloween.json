@@ -1,0 +1,50 @@
+[
+  {
+    "id": "demon",
+    "name": "Demon",
+    "voice": "george",
+    "text": "You opened the wrong door. Now. You belong. To me."
+  },
+  {
+    "id": "ghost",
+    "name": "Ghost",
+    "voice": "jane",
+    "text": "Whooo is in my house? I have been waiting. For a hundred years."
+  },
+  {
+    "id": "witch",
+    "name": "Witch",
+    "voice": "vera",
+    "text": "Eye of newt, and toe of frog. Into the cauldron, little one! Hee hee hee hee!"
+  },
+  {
+    "id": "vampire",
+    "name": "Vampire",
+    "voice": "juergen",
+    "text": "Good evening. I never drink. Wine. Won't you come in? The night is young."
+  },
+  {
+    "id": "zombie",
+    "name": "Zombie",
+    "voice": "michael",
+    "text": "Braaains. So hungry. Need. Braaaains."
+  },
+  {
+    "id": "robot",
+    "name": "Frankenstein's Robot",
+    "voice": "charles",
+    "text": "It's alive. It's alive! Initiating. Trick. Or. Treat. Protocol."
+  },
+  {
+    "id": "radio",
+    "name": "Haunted Radio",
+    "voice": "paul",
+    "text": "This is an emergency broadcast. Do not. Answer. The door. They are already inside."
+  },
+  {
+    "id": "possessed",
+    "name": "Possessed Child",
+    "voice": "eve",
+    "text": "Ring around the rosie. Do you want to play with us? Forever. And ever. And ever."
+  }
+]
