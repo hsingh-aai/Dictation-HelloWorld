@@ -1,0 +1,229 @@
+<title>Spooky Furby Voice Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Creepster&family=Figtree:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one column, two "rooms" — a candy-pink pop stage, then a dark haunted gallery of voice cards. Single dark look by design. */
+  :root {
+    --bg: #120d17;
+    --surface: #1d1624;
+    --line: #2f2538;
+    --fg: #f1eaf5;
+    --muted: #a597b1;
+    --candy: #ff6fcf;
+    --pumpkin: #ff8a2a;
+    --display-pop: "Bungee", "Arial Black", system-ui, sans-serif;
+    --display-spook: "Creepster", "Impact", fantasy;
+    --body: "Figtree", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+  main { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 72px; display: grid; gap: 56px; }
+  h1, h2, h3, p { margin: 0; }
+  .eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  header { display: grid; gap: 10px; }
+  header h1 { font: 400 clamp(30px, 6vw, 48px)/1.05 var(--display-pop); text-wrap: balance; }
+  header h1 .spook { font-family: var(--display-spook); color: var(--pumpkin); letter-spacing: .02em; }
+  header h1 .pop { color: var(--candy); }
+  header p { color: var(--muted); max-width: 62ch; }
+
+  section { display: grid; gap: 18px; }
+  .section-head { display: grid; gap: 6px; }
+  .section-head h2 { font-size: clamp(24px, 4.5vw, 34px); line-height: 1.1; font-weight: 400; }
+  #song h2 { font-family: var(--display-pop); color: var(--candy); }
+  #spooky h2 { font-family: var(--display-spook); color: var(--pumpkin); letter-spacing: .03em; font-size: clamp(30px, 6vw, 44px); }
+  .section-head p { color: var(--muted); max-width: 62ch; }
+
+  button.play {
+    flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    display: grid; place-items: center; background: var(--fg); color: var(--bg);
+    transition: transform .15s ease;
+  }
+  button.play:hover { transform: scale(1.06); }
+  button.play:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  button.play svg { width: 16px; height: 16px; fill: currentColor; }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; cursor: pointer; }
+  .bar > i { display: block; height: 100%; width: 0; background: currentColor; }
+  .time { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Song stage */
+  .stage { background: var(--surface); border: 1px solid color-mix(in oklab, var(--candy) 45%, var(--line)); border-radius: 18px; padding: 20px; display: grid; gap: 18px; color: var(--candy); }
+  .stage .player { display: flex; align-items: center; gap: 14px; }
+  .stage .player > div { flex: 1; min-width: 0; display: grid; gap: 8px; }
+  .stage .player button.play { background: var(--candy); }
+  .stage .meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--fg); font-weight: 700; }
+  .lyrics { display: grid; gap: 4px; color: var(--muted); }
+  .lyrics li { list-style: none; display: grid; grid-template-columns: 74px 1fr; gap: 10px; padding: 5px 8px; border-radius: 8px; transition: background .2s, color .2s; }
+  .lyrics ul { margin: 0; padding: 0; display: grid; gap: 2px; }
+  .lyrics .who { font: 11px/1.9 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+  .lyrics .owner .who { color: #8fb4ff; }
+  .lyrics .furby .who { color: var(--candy); }
+  .lyrics li.on { background: color-mix(in oklab, var(--candy) 16%, transparent); color: var(--fg); }
+  .lyrics .tag { font: 11px var(--mono); color: var(--muted); padding: 10px 8px 2px; text-transform: uppercase; letter-spacing: .1em; }
+
+  /* Spooky gallery */
+  .reel { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; background: color-mix(in oklab, var(--pumpkin) 12%, var(--surface)); color: var(--pumpkin); }
+  .reel button.play { background: var(--pumpkin); }
+  .reel > div { flex: 1; min-width: 0; display: grid; gap: 8px; }
+  .reel strong { color: var(--fg); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; grid-template-rows: auto 1fr auto auto; color: var(--hue); min-width: 0; }
+  .card.playing { border-color: var(--hue); }
+  .card header { display: flex; align-items: center; gap: 12px; }
+  .card header button.play { background: var(--hue); }
+  .card h3 { font-size: 17px; color: var(--fg); }
+  .card .voice { font: 12px var(--mono); color: var(--muted); }
+  .card blockquote { margin: 0; color: var(--fg); opacity: .85; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips span { font: 11px var(--mono); padding: 3px 7px; border-radius: 6px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+
+  footer { color: var(--muted); font-size: 13px; display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+  footer code { font: 12px var(--mono); color: var(--fg); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">AssemblyAI · Voice Agent API voices</span>
+    <h1><span class="pop">Furby Pop</span> &amp; <span class="spook">Haunted Voices</span></h1>
+    <p>Every sound here started as plain text read by an AssemblyAI voice. Then we pitched, stacked, echoed and crushed it into a pop song and eight Halloween characters.</p>
+  </header>
+
+  <section id="song">
+    <div class="section-head">
+      <span class="eyebrow">Track 01 · 128 BPM · Am F C G</span>
+      <h2>I Am a Furby Girl</h2>
+      <p>The Furby is the <code>jane</code> voice pitched up a few semitones with a light slapback echo. Her owner is <code>george</code>, pitched down slightly. The beat is synthesized in JavaScript and ducks under the vocals so every word stays clear.</p>
+    </div>
+    <div class="stage">
+      <div class="player">
+        <button class="play" id="song-btn" aria-label="Play I Am a Furby Girl"></button>
+        <div>
+          <div class="meta"><span>I Am a Furby Girl</span><span class="time" id="song-time">0:00 / 1:03</span></div>
+          <div class="bar" id="song-bar"><i></i></div>
+        </div>
+      </div>
+      <div class="lyrics" id="lyrics"></div>
+    </div>
+  </section>
+
+  <section id="spooky">
+    <div class="section-head">
+      <span class="eyebrow">Track 02 · 8 characters</span>
+      <h2>Halloween Voices</h2>
+      <p>Same idea, darker. Each character pairs a voice with a light effect chain and quiet synthesized atmosphere, tuned so the words stay easy to follow.</p>
+    </div>
+    <div class="reel">
+      <button class="play" data-src="out/halloween-reel.mp3" aria-label="Play full reel"></button>
+      <div>
+        <strong>Play all eight, back to back</strong>
+        <div class="bar"><i></i></div>
+      </div>
+    </div>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <footer>
+    <span>Built with AssemblyAI voices plus ffmpeg effects. Regenerate locally with <code>node furby-song.js</code> and <code>node halloween.js</code>.</span>
+  </footer>
+</main>
+
+<script>
+  const PLAY = '<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9.5-5.5z"/></svg>';
+  const PAUSE = '<svg viewBox="0 0 16 16"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg>';
+
+  const BAR = 60 / 128 * 4;
+  const LYRICS = [
+    ["Intro", [[1, "furby", "Dah ay loh oo tye! Kah may may!"], [2, "furby", "Hee hee hee! Tickle me!"]]],
+    ["Chorus", [[4, "furby", "I am a Furby girl, in a Furby world!"], [6, "furby", "Fuzzy and fluffy, my eyes go blink blink!"], [8, "furby", "I can talk, I can sing, I can learn anything!"], [10, "furby", "I am a Furby girl, and I never sleep!"]]],
+    ["Verse", [[12, "owner", "Hey Furby, it's three A M. Why are you still talking?"], [14, "furby", "Me love you! Me hungry! Tickle me again!"], [16, "owner", "Where is the off switch? There is no off switch!"], [18, "furby", "Oo nye loo lay loo! That means party time!"]]],
+    ["Chorus", [[20, "furby", "I am a Furby girl, in a Furby world!"], [22, "furby", "Fuzzy and fluffy, my eyes go blink blink!"], [24, "furby", "I can talk, I can sing, I can learn anything!"], [26, "furby", "I am a Furby girl, and I never sleep!"]]],
+    ["Outro", [[28, "furby", "Me sleepy now. Goodnight. Kah may may."]]],
+  ];
+
+  const STYLES = [
+    { id: "demon", name: "Demon", voice: "george", hue: "#ff4d4d", text: "You opened the wrong door. Now. You belong. To me.", fx: ["pitch −5", "sub-octave shadow", "short echo", "drone"] },
+    { id: "ghost", name: "Ghost", voice: "jane", hue: "#9fe7ff", text: "Whooo is in my house? I have been waiting. For a hundred years.", fx: ["reverse reverb", "soft vibrato", "long echo", "wind"] },
+    { id: "witch", name: "Witch", voice: "vera", hue: "#8dff7a", text: "Eye of newt, and toe of frog. Into the cauldron, little one! Hee hee hee hee!", fx: ["pitch +2", "light echo", "cauldron"] },
+    { id: "vampire", name: "Vampire", voice: "juergen", hue: "#d06bff", text: "Good evening. I never drink. Wine. Won't you come in? The night is young.", fx: ["pitch −3", "tempo 0.92", "castle echo", "organ"] },
+    { id: "zombie", name: "Zombie", voice: "michael", hue: "#b8c95a", text: "Braaains. So hungry. Need. Braaaains.", fx: ["pitch −4", "tempo 0.85", "wobble", "light bitcrush"] },
+    { id: "robot", name: "Frankenstein's Robot", voice: "charles", hue: "#5ad1c9", text: "It's alive. It's alive! Initiating. Trick. Or. Treat. Protocol.", fx: ["metal comb", "robot double", "zaps"] },
+    { id: "radio", name: "Haunted Radio", voice: "paul", hue: "#ffd35a", text: "This is an emergency broadcast. Do not. Answer. The door. They are already inside.", fx: ["bandpass 300–4k", "crackle", "static"] },
+    { id: "possessed", name: "Possessed Child", voice: "eve", hue: "#ff9ec4", text: "Ring around the rosie. Do you want to play with us? Forever. And ever. And ever.", fx: ["pitch +4", "−12 shadow voice", "echo", "music box"] },
+  ];
+
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = (t) => isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "0:00";
+
+  // lyrics sheet
+  document.getElementById("lyrics").innerHTML = LYRICS.map(([tag, lines]) =>
+    `<div class="tag">${tag}</div><ul>` + lines.map(([bar, who, text]) =>
+      `<li class="${who}" data-at="${bar * BAR}"><span class="who">${who === "furby" ? "Furby" : "Owner"}</span><span>${esc(text)}</span></li>`).join("") + "</ul>").join("");
+
+  // cards
+  document.getElementById("cards").innerHTML = STYLES.map((s) => `
+    <article class="card" style="--hue:${s.hue}">
+      <header>
+        <button class="play" data-src="out/halloween-${s.id}.mp3" aria-label="Play ${esc(s.name)}"></button>
+        <div><h3>${esc(s.name)}</h3><div class="voice">voice: ${s.voice}</div></div>
+      </header>
+      <blockquote>“${esc(s.text)}”</blockquote>
+      <div class="chips">${s.fx.map((f) => `<span>${esc(f)}</span>`).join("")}</div>
+      <div class="bar"><i></i></div>
+    </article>`).join("");
+
+  // one shared audio element; each button owns a src
+  const audio = new Audio();
+  let current = null;
+  const songBtn = document.getElementById("song-btn");
+  songBtn.dataset.src = "out/furby-girl.mp3";
+  const buttons = [...document.querySelectorAll("button.play")];
+  buttons.forEach((b) => (b.innerHTML = PLAY));
+  const barFor = (btn) => btn === songBtn ? document.getElementById("song-bar") : btn.closest(".card, .reel").querySelector(".bar");
+
+  function setState(btn, playing) {
+    btn.innerHTML = playing ? PAUSE : PLAY;
+    btn.closest(".card")?.classList.toggle("playing", playing);
+  }
+
+  buttons.forEach((btn) => btn.addEventListener("click", () => {
+    if (current === btn) {
+      if (audio.paused) audio.play(); else audio.pause();
+      return;
+    }
+    if (current) { setState(current, false); barFor(current).firstElementChild.style.width = "0"; }
+    current = btn;
+    audio.src = btn.dataset.src;
+    audio.play().catch(() => setState(btn, false));
+  }));
+
+  audio.addEventListener("play", () => current && setState(current, true));
+  audio.addEventListener("pause", () => current && setState(current, false));
+  audio.addEventListener("ended", () => current && setState(current, false));
+
+  const lines = [...document.querySelectorAll(".lyrics li")];
+  audio.addEventListener("timeupdate", () => {
+    if (!current) return;
+    const t = audio.currentTime, d = audio.duration || 1;
+    barFor(current).firstElementChild.style.width = `${(t / d) * 100}%`;
+    if (current === songBtn) {
+      document.getElementById("song-time").textContent = `${fmt(t)} / ${fmt(audio.duration)}`;
+      let active = null;
+      for (const li of lines) if (t >= +li.dataset.at && t < +li.dataset.at + BAR * 2) active = li;
+      lines.forEach((li) => li.classList.toggle("on", li === active));
+    }
+  });
+
+  // click a bar to seek within the track that's playing
+  document.querySelectorAll(".bar").forEach((bar) => bar.addEventListener("click", (e) => {
+    if (!current || barFor(current) !== bar || !audio.duration) return;
+    const r = bar.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  }));
+  // click a lyric line to jump there
+  lines.forEach((li) => li.addEventListener("click", () => {
+    if (current !== songBtn) songBtn.click();
+    audio.currentTime = +li.dataset.at;
+  }));
+</script>

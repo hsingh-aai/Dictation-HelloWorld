@@ -3,13 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dictation Flow</title>
+<title>Dictation Demo</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="intake.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">
 </head>
 <body>
-<main>
+<nav class="menubar" aria-label="Demos">
+  <a href="#dictation" data-screen="dictation">Dictation</a>
+  <a href="#intake" data-screen="intake">Intake form</a>
+</nav>
+
+<main id="screen-dictation">
   <header>
-    <h1>Dictation Flow</h1>
+    <h1>Dictation Demo</h1>
     <p class="sub">Hold <kbd>Space</kbd> or click the mic. Verbatim and cleaned-up text, from one request.</p>
   </header>
 
@@ -75,6 +82,127 @@
     <div class="budget" id="budget"></div>
   </details>
 </main>
+
+<main id="screen-intake" hidden>
+<div class="wrap">
+  <form id="intake" novalidate>
+    <div class="card header">
+      <h1>Patient Intake Form</h1>
+      <p>Please complete this form before your visit. Use the big microphone to fill everything at once, or the 🎤 next to any question to dictate just that answer.</p>
+      <p class="required-note">* Indicates required question</p>
+    </div>
+
+    <div class="card hero">
+      <h2>Fill the whole form by voice</h2>
+      <p class="hint">Tap the microphone and just talk — for example: <em>"My name is Maria Lopez, born March 4th 1985, phone 415 555 0123. I'm here because of a sore throat and fever since Monday. I take lisinopril 10 milligrams and I'm allergic to penicillin…"</em> Tap again when you're done (up to 2 minutes).</p>
+      <button type="button" class="big-mic" id="bigMic" title="Dictate the whole form"></button>
+      <p class="hero-status" id="heroStatus">Tap to start speaking</p>
+      <textarea class="hero-transcript hidden" id="heroTranscript" placeholder="Your transcript will appear here — you can edit it before filling the form."></textarea>
+      <div class="hero-partial" id="heroPartial"></div>
+      <div class="hero-actions hidden" id="heroActions">
+        <button type="button" class="link" id="heroClear">Clear transcript</button>
+        <button type="button" class="primary" id="heroFill">Fill form from transcript</button>
+      </div>
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="section-title">Personal information</div>
+    <div class="card">
+      <label class="q">Full name <span class="req">*</span></label>
+      <div class="field"><input name="full_name" data-format="Return just the name with proper capitalization." required placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Date of birth <span class="req">*</span></label>
+      <div class="field"><input name="date_of_birth" data-format="Format the date as Month D, YYYY (for example March 4, 1985)." required placeholder="e.g. March 4, 1985" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Sex</label>
+      <div class="options">
+        <label><input type="radio" name="sex" value="Female" /> Female</label>
+        <label><input type="radio" name="sex" value="Male" /> Male</label>
+        <label><input type="radio" name="sex" value="Other" /> Other</label>
+        <label><input type="radio" name="sex" value="Prefer not to say" /> Prefer not to say</label>
+      </div>
+    </div>
+    <div class="card">
+      <label class="q">Phone number <span class="req">*</span></label>
+      <div class="field"><input name="phone" data-format="Format a 10-digit US number as (XXX) XXX-XXXX." required placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Email</label>
+      <div class="field"><input name="email" data-format="Reconstruct a spoken email address ("dot" becomes ".", "at" becomes "@"), all lowercase, no spaces." placeholder="Your answer" data-dictate /></div>
+    </div>
+    <div class="card">
+      <label class="q">Home address</label>
+      <div class="field"><textarea name="address" rows="1" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Emergency contact (name, relationship, phone)</label>
+      <div class="field"><textarea name="emergency_contact" rows="1" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+
+    <div class="section-title">Insurance</div>
+    <div class="card">
+      <label class="q">Insurance provider</label>
+      <div class="field"><input name="insurance_provider" placeholder="Your answer" data-dictate
+        data-keyterms="Aetna,Cigna,UnitedHealthcare,Blue Cross Blue Shield,Kaiser Permanente,Humana,Medicare,Medicaid" /></div>
+    </div>
+    <div class="card">
+      <label class="q">Member ID</label>
+      <div class="field"><input name="member_id" data-format="Return the ID as uppercase letters and digits with no spaces or punctuation." placeholder="Your answer" data-dictate /></div>
+    </div>
+
+    <div class="section-title">Visit details</div>
+    <div class="card">
+      <label class="q">Reason for today's visit <span class="req">*</span></label>
+      <div class="field"><textarea name="reason_for_visit" rows="2" required placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Describe your symptoms and when they started</label>
+      <div class="field"><textarea name="symptoms" rows="2" placeholder="Your answer" data-dictate></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Current pain level (0–10)</label>
+      <div class="scale" id="painScale"><span>None</span></div>
+    </div>
+    <div class="card">
+      <label class="q">Current medications (name and dose)</label>
+      <div class="field"><textarea name="medications" data-format="Write a comma-separated list of medications with doses (e.g. Lisinopril 10 mg daily)." rows="2" placeholder="Your answer" data-dictate
+        data-keyterms="lisinopril,metformin,atorvastatin,levothyroxine,amlodipine,omeprazole,albuterol,gabapentin,sertraline,losartan"></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Allergies</label>
+      <div class="field"><textarea name="allergies" data-format="Write a comma-separated list of allergies, including the reaction if stated." rows="1" placeholder="Your answer" data-dictate
+        data-keyterms="penicillin,sulfa,amoxicillin,latex,ibuprofen,codeine"></textarea></div>
+    </div>
+    <div class="card">
+      <label class="q">Past medical history / surgeries</label>
+      <div class="field"><textarea name="medical_history" data-format="Write a comma-separated list of conditions and surgeries, with years if stated." rows="2" placeholder="Your answer" data-dictate
+        data-keyterms="hypertension,type 2 diabetes,asthma,COPD,hypothyroidism,appendectomy,cholecystectomy"></textarea></div>
+    </div>
+
+    <div class="card">
+      <label class="options"><input type="checkbox" name="consent" required /> I confirm this information is accurate to the best of my knowledge. <span class="req">*</span></label>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="reset" class="link">Clear form</button>
+    </div>
+  </form>
+
+  <div id="result" class="card hidden">
+    <h2 class="done">Thanks — your responses were recorded.</h2>
+    <p class="done-sub">Demo mode: nothing was stored. Here's what was captured:</p>
+    <pre id="json"></pre>
+    <button type="button" class="link" id="another">Submit another response</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+</main>
+
 <script src="app.js" type="module"></script>
+<script src="intake.js" type="module"></script>
+<script src="nav.js" type="module"></script>
 </body>
 </html>

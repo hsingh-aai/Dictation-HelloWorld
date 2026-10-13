@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'">
+<title>Dictation Hello</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Dictation Hello</h1>
+      <p class="sub" id="hint">Press <kbd id="hotkey">Ctrl+Alt+D</kbd> to start and stop</p>
+    </div>
+    <button class="icon" id="close" title="Hide" aria-label="Hide panel">&times;</button>
+  </header>
+
+  <div class="warning" id="keyWarning" hidden>No API key: add <code>ASSEMBLY_AI_KEY</code> to the repo's <code>.env</code> and restart.</div>
+  <div class="warning" id="axWarning" hidden>
+    Auto-paste needs Accessibility for Electron — until then, results are copied to the clipboard.
+    <button id="grantAx">Open settings</button>
+  </div>
+
+  <section class="recorder">
+    <button id="mic" class="mic" aria-label="Start dictation">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15Z"/><path d="M19 11.5a7 7 0 0 1-14 0"/><line x1="12" y1="18.5" x2="12" y2="22"/></svg>
+    </button>
+    <div class="meter" id="meter"><span></span></div>
+    <div class="status" id="status" aria-live="polite">Ready</div>
+  </section>
+
+  <section class="panes" id="panes" hidden>
+    <article class="pane">
+      <h2>Verbatim</h2>
+      <div class="out" id="verbatim"></div>
+    </article>
+    <article class="pane accent">
+      <h2>Pasted</h2>
+      <div class="out" id="cleaned"></div>
+    </article>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="recent">
+    <h2>Recent</h2>
+    <ul id="recent"><li class="ph">Your dictations show up here until you quit.</li></ul>
+  </section>
+
+  <details class="settings">
+    <summary>Settings</summary>
+    <label class="row"><input type="checkbox" id="enhanced" checked> <span>Clean up dictation <em>(off pastes the verbatim transcript)</em></span></label>
+    <label>
+      <span>Key terms <em>(comma-separated)</em></span>
+      <input id="keyterms" type="text" placeholder="AssemblyAI, Kubernetes">
+    </label>
+    <div>
+      <span class="label">Shortcuts <em>— say the phrase, get the text</em></span>
+      <div id="shortcuts"></div>
+      <button type="button" class="add" id="addShortcut">+ Add shortcut</button>
+    </div>
+  </details>
+</main>
+<script src="renderer.js" type="module"></script>
+</body>
+</html>

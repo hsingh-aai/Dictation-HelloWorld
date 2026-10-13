@@ -1,0 +1,162 @@
+/* Menu bar shared by both screens. */
+.menubar {
+  position: sticky; top: 0; z-index: 5; display: flex; justify-content: center; gap: 4px;
+  padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.menubar a {
+  font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none;
+  padding: 6px 14px; border-radius: 999px;
+}
+.menubar a:hover { color: var(--ink); }
+.menubar a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.menubar a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Screen 2: Google Forms-style intake form. Everything is scoped under #screen-intake
+   so it can't collide with the dictation screen's .mic, textarea and heading styles. */
+#screen-intake {
+  --f-accent: #673ab7;
+  --f-accent-soft: #ede7f6;
+  --f-bg: #f0ebf8;
+  --f-card: #ffffff;
+  --f-text: #202124;
+  --f-muted: #5f6368;
+  --f-border: #dadce0;
+  --f-danger: #d93025;
+  --f-live: #e8453c;
+  --f-ok: #188038;
+  --f-ok-soft: #e6f4ea;
+  --f-ok-border: #a8dab5;
+  --f-warn: #b06000;
+  --f-warn-soft: #fef7e0;
+  --f-warn-edge: #f9ab00;
+  --f-on-accent: #ffffff;
+  --f-mic-bg: #ffffff;
+  --f-code-bg: #f8f9fa;
+  --f-toast-bg: #323232;
+  --f-toast-text: #ffffff;
+  max-width: none; padding: 12px 16px 48px;
+  font-family: Roboto, Arial, sans-serif; color: var(--f-text);
+}
+@media (prefers-color-scheme: dark) {
+  #screen-intake {
+    --f-accent: #b39ddb; --f-accent-soft: #2e2640; --f-bg: #16131d; --f-card: #221e2b;
+    --f-text: #e8e6ed; --f-muted: #a9a4b5; --f-border: #3b3548; --f-danger: #f28b82;
+    --f-live: #f06a60; --f-ok: #81c995; --f-ok-soft: #1f3326; --f-ok-border: #3c6b4a;
+    --f-warn: #fdd663; --f-warn-soft: #3a2f14; --f-warn-edge: #fdd663; --f-on-accent: #16131d;
+    --f-mic-bg: #2a2534; --f-code-bg: #1a1722; --f-toast-bg: #e8e6ed; --f-toast-text: #16131d;
+  }
+}
+body[data-screen="intake"], body[data-screen="intake"] .menubar { background: #f0ebf8; }
+@media (prefers-color-scheme: dark) {
+  body[data-screen="intake"], body[data-screen="intake"] .menubar { background: #16131d; }
+}
+
+#screen-intake .wrap { max-width: 720px; margin: 0 auto; }
+#screen-intake .card {
+  background: var(--f-card); border: 1px solid var(--f-border); border-radius: 8px;
+  padding: 24px; margin-bottom: 12px; transition: background .4s, border-color .4s;
+}
+#screen-intake .card.header { border-top: 10px solid var(--f-accent); }
+#screen-intake h1 { margin: 0 0 8px; font-size: 32px; font-weight: 400; letter-spacing: 0; }
+#screen-intake .card.header p { margin: 0; color: var(--f-muted); font-size: 14px; line-height: 1.5; }
+#screen-intake .required-note { color: var(--f-danger); margin-top: 12px; }
+
+/* Big "fill everything" card */
+#screen-intake .hero { text-align: center; border-left: 6px solid var(--f-accent); }
+#screen-intake .hero h2 { margin: 0 0 6px; font-size: 20px; font-weight: 500; }
+#screen-intake .hint { margin: 0 auto 20px; color: var(--f-muted); font-size: 14px; line-height: 1.5; max-width: 520px; }
+#screen-intake .big-mic {
+  width: 96px; height: 96px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--f-accent); color: var(--f-on-accent); display: inline-grid; place-items: center;
+  box-shadow: 0 4px 14px rgba(103,58,183,.35); transition: transform .15s, background .15s;
+}
+#screen-intake .big-mic:hover { transform: scale(1.05); }
+#screen-intake .big-mic svg { width: 42px; height: 42px; fill: currentColor; }
+#screen-intake .big-mic.live { background: var(--f-live); animation: f-bigpulse 1.4s infinite; }
+#screen-intake .big-mic.busy { opacity: .6; cursor: wait; }
+@keyframes f-bigpulse {
+  0% { box-shadow: 0 0 0 0 rgba(232,69,60,.5); }
+  70% { box-shadow: 0 0 0 22px rgba(232,69,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,69,60,0); }
+}
+#screen-intake .hero-status { font-size: 14px; color: var(--f-muted); margin: 14px 0 0; min-height: 20px; }
+#screen-intake .hero-transcript {
+  width: 100%; margin-top: 16px; min-height: 70px; font: inherit; font-size: 14px; line-height: 1.5;
+  border: 1px solid var(--f-border); border-radius: 6px; padding: 10px 12px; resize: vertical;
+  text-align: left; background: var(--f-card); color: var(--f-text);
+}
+#screen-intake .hero-transcript:focus { outline: 2px solid var(--f-accent); outline-offset: -1px; }
+#screen-intake .hero-partial { font-size: 13px; color: var(--f-muted); font-style: italic; text-align: left; min-height: 18px; margin-top: 6px; }
+#screen-intake .hero-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+#screen-intake .summary { margin-top: 14px; font-size: 14px; text-align: left; border-radius: 6px; padding: 10px 14px; display: none; line-height: 1.5; }
+#screen-intake .summary.show { display: block; }
+#screen-intake .summary.ok { background: var(--f-ok-soft); color: var(--f-ok); }
+#screen-intake .summary.warn { background: var(--f-warn-soft); color: var(--f-warn); }
+#screen-intake .summary a { color: inherit; font-weight: 500; }
+
+/* Questions */
+#screen-intake .section-title {
+  background: var(--f-accent); color: var(--f-on-accent); border-radius: 8px 8px 0 0;
+  padding: 10px 24px; font-size: 15px; font-weight: 500; margin: 20px 0 0; display: inline-block;
+}
+#screen-intake .section-title + .card { border-top-left-radius: 0; }
+#screen-intake label.q { display: block; font-size: 16px; margin-bottom: 16px; }
+#screen-intake .req { color: var(--f-danger); }
+#screen-intake .field { display: flex; align-items: flex-end; gap: 10px; }
+#screen-intake .field input, #screen-intake .field textarea {
+  flex: 1; width: auto; font: inherit; font-size: 14px; border: none; border-radius: 0;
+  border-bottom: 1px solid var(--f-border); padding: 8px 0; outline: none;
+  background: transparent; resize: vertical; color: var(--f-text);
+}
+#screen-intake .field textarea { min-height: 36px; }
+#screen-intake .field input:focus, #screen-intake .field textarea:focus {
+  outline: none; border-color: transparent; border-bottom: 2px solid var(--f-accent);
+}
+#screen-intake .partial { font-size: 13px; color: var(--f-muted); font-style: italic; min-height: 18px; margin-top: 6px; }
+#screen-intake .q-mic {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--f-border);
+  background: var(--f-mic-bg); cursor: pointer; display: grid; place-items: center; color: var(--f-muted);
+  transition: background .15s, color .15s;
+}
+#screen-intake .q-mic:hover { background: var(--f-accent-soft); color: var(--f-accent); }
+#screen-intake .q-mic.live { background: var(--f-live); color: var(--f-on-accent); border-color: var(--f-live); animation: f-pulse 1.4s infinite; }
+#screen-intake .q-mic.busy { opacity: .6; cursor: wait; }
+#screen-intake .q-mic svg { width: 18px; height: 18px; fill: currentColor; }
+@keyframes f-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(232,69,60,.55); }
+  70% { box-shadow: 0 0 0 10px rgba(232,69,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,69,60,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #screen-intake .q-mic.live, #screen-intake .big-mic.live { animation: none; }
+}
+
+#screen-intake .card.filled { background: var(--f-ok-soft); border-color: var(--f-ok-border); }
+#screen-intake .card.missing { border-left: 4px solid var(--f-warn-edge); }
+#screen-intake .card.missing label.q::after {
+  content: "Not captured — type or tap 🎤"; font-size: 12px; color: var(--f-warn);
+  background: var(--f-warn-soft); border-radius: 10px; padding: 2px 8px; margin-left: 8px; vertical-align: middle;
+}
+
+#screen-intake .options { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
+#screen-intake .options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+#screen-intake .scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--f-muted); gap: 4px; align-items: flex-end; }
+#screen-intake .scale label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+#screen-intake .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+#screen-intake button.primary {
+  background: var(--f-accent); color: var(--f-on-accent); border: none; border-radius: 4px;
+  padding: 10px 24px; font: inherit; font-weight: 500; cursor: pointer;
+}
+#screen-intake button.primary:disabled { opacity: .5; cursor: default; }
+#screen-intake button.link { background: none; border: none; color: var(--f-accent); font: inherit; cursor: pointer; padding: 10px 4px; }
+#screen-intake button:focus-visible { outline: 2px solid var(--f-accent); outline-offset: 2px; }
+#screen-intake .done { font-weight: 400; margin-top: 0; font-size: 22px; }
+#screen-intake .done-sub { color: var(--f-muted); font-size: 14px; }
+#screen-intake pre { background: var(--f-code-bg); color: var(--f-text); border-radius: 6px; padding: 16px; overflow-x: auto; font-size: 13px; }
+#screen-intake .toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--f-toast-bg); color: var(--f-toast-text);
+  padding: 12px 20px; border-radius: 4px; font-size: 14px; display: none; max-width: calc(100% - 32px); z-index: 10;
+}
+#screen-intake .hidden { display: none !important; }
+[hidden] { display: none !important; }

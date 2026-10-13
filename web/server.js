@@ -95,6 +95,38 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   }
 });
 
+// Intake form: re-fill from an edited transcript. The mic path never needs this —
+// its llm_instruction returns the fields as JSON in the transcribe request itself.
+app.post('/api/extract', express.json({ limit: '200kb' }), async (req, res) => {
+  if (!API_KEY) return res.status(500).json({ error: 'ASSEMBLY_AI_KEY is not set in .env' });
+  const { transcript, instruction } = req.body || {};
+  if (!transcript?.trim() || !instruction?.trim()) {
+    return res.status(400).json({ error: 'transcript and instruction are required' });
+  }
+  try {
+    const upstream = await fetch('https://llm-gateway.assemblyai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.LLM_MODEL || 'claude-sonnet-4-5-20250929',
+        max_tokens: 1500,
+        messages: [
+          { role: 'system', content: instruction },
+          { role: 'user', content: transcript },
+        ],
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    const body = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({ error: body.error?.message || body.error || 'Request failed' });
+    }
+    res.json({ llm_response: body.choices?.[0]?.message?.content || '' });
+  } catch (err) {
+    res.status(500).json({ error: `Proxy error: ${err.message}` });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Dictation demo:  http://localhost:${PORT}`);
   if (!API_KEY) console.warn('WARNING: ASSEMBLY_AI_KEY missing from ../.env — requests will fail.');

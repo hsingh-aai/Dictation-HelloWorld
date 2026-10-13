@@ -265,14 +265,17 @@ el.mic.addEventListener('pointerdown', async () => { await startRecording(); if 
 el.mic.addEventListener('pointerup', stopRecording);
 el.mic.addEventListener('pointerleave', stopRecording);
 
+// Space belongs to this screen only — on the intake form it types and presses buttons.
+const onDictationScreen = () => !el.mic.closest('[hidden]');
+
 document.addEventListener('keydown', async (e) => {
-  if (e.code !== 'Space' || e.repeat || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if (e.code !== 'Space' || e.repeat || /INPUT|TEXTAREA/.test(e.target.tagName) || !onDictationScreen()) return;
   e.preventDefault();
   await startRecording();
   if (stream) startMeter(stream);
 });
 document.addEventListener('keyup', (e) => {
-  if (e.code === 'Space' && !/INPUT|TEXTAREA/.test(e.target.tagName)) { e.preventDefault(); stopRecording(); }
+  if (e.code === 'Space' && !/INPUT|TEXTAREA/.test(e.target.tagName) && onDictationScreen()) { e.preventDefault(); stopRecording(); }
 });
 
 document.querySelectorAll('.presets button').forEach((b) => {

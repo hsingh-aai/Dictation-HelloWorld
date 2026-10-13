@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AssemblyAI TTS Playground</title>
+<style>
+  :root { --bg:#0f0a14; --card:#1c1424; --ink:#f3ecf7; --muted:#a898b3; --accent:#ff7a1a; --pink:#ff5fc8; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui,sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { margin:0 0 4px; } h2 { margin:40px 0 12px; } .sub { color:var(--muted); margin:0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+  .card { background:var(--card); border-radius:12px; padding:14px 16px; }
+  .card h3 { margin:0; font-size:16px; } .card h3 span { color:var(--muted); font-weight:400; font-size:12px; margin-left:6px; }
+  .card p { color:var(--muted); font-size:13px; min-height:40px; } audio { width:100%; }
+  .hero { border:1px solid var(--pink); } .hero h3 { color:var(--pink); } .reel h3 { color:var(--accent); }
+</style></head><body><main>
+  <h1>AssemblyAI TTS Playground</h1>
+  <p class="sub">Voice Agent API voices, spoken verbatim, then sung or haunted with effects.</p>
+  <h2>💖 I Am a Furby Girl</h2>
+  <div class="card hero"><h3>Full track <span>voices: jane (Furby) + george (owner)</span></h3>
+    <p>Pitched-up TTS vocals + octave double, chorus and echo over a 128 BPM synth beat.</p>
+    <audio controls preload="none" src="out/furby-girl.mp3"></audio></div>
+  <h2>🎃 Halloween Voices</h2>
+  <div class="card reel"><h3>Full reel <span>all 8 back to back</span></h3><p>Play everything in one go.</p>
+    <audio controls preload="none" src="out/halloween-reel.mp3"></audio></div>
+  <div class="grid" style="margin-top:12px">
+    <div class="card"><h3>Demon <span>voice: george</span></h3>
+      <p>“You opened the wrong door. Now. You belong. To me.”</p><audio controls preload="none" src="out/halloween-demon.mp3"></audio></div>
+    <div class="card"><h3>Ghost <span>voice: jane</span></h3>
+      <p>“Whooo is in my house? I have been waiting. For a hundred years.”</p><audio controls preload="none" src="out/halloween-ghost.mp3"></audio></div>
+    <div class="card"><h3>Witch <span>voice: vera</span></h3>
+      <p>“Eye of newt, and toe of frog. Into the cauldron, little one! Hee hee hee hee!”</p><audio controls preload="none" src="out/halloween-witch.mp3"></audio></div>
+    <div class="card"><h3>Vampire <span>voice: juergen</span></h3>
+      <p>“Good evening. I never drink. Wine. Won&#x27;t you come in? The night is young.”</p><audio controls preload="none" src="out/halloween-vampire.mp3"></audio></div>
+    <div class="card"><h3>Zombie <span>voice: michael</span></h3>
+      <p>“Braaains. So hungry. Need. Braaaains.”</p><audio controls preload="none" src="out/halloween-zombie.mp3"></audio></div>
+    <div class="card"><h3>Frankenstein&#x27;s Robot <span>voice: charles</span></h3>
+      <p>“It&#x27;s alive. It&#x27;s alive! Initiating. Trick. Or. Treat. Protocol.”</p><audio controls preload="none" src="out/halloween-robot.mp3"></audio></div>
+    <div class="card"><h3>Haunted Radio <span>voice: paul</span></h3>
+      <p>“This is an emergency broadcast. Do not. Answer. The door. They are already inside.”</p><audio controls preload="none" src="out/halloween-radio.mp3"></audio></div>
+    <div class="card"><h3>Possessed Child <span>voice: eve</span></h3>
+      <p>“Ring around the rosie. Do you want to play with us? Forever. And ever. And ever.”</p><audio controls preload="none" src="out/halloween-possessed.mp3"></audio></div>
+  </div>
+</main></body></html>
